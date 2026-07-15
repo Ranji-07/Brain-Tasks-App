@@ -28,7 +28,6 @@ phases:
       - echo Updating kubeconfig...
       - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $EKS_CLUSTER_NAME
       - sed -i "s|IMAGE_PLACEHOLDER|$REPOSITORY_URI:$IMAGE_TAG|g" deployment.yaml
-      - kubectl apply -f namespace.yaml
       - kubectl apply -f deployment.yaml
       - kubectl apply -f service.yaml
 

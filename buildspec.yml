@@ -5,12 +5,12 @@ env:
     AWS_DEFAULT_REGION: ap-south-1
     IMAGE_REPO_NAME: brain-tasks-app
     IMAGE_TAG: latest
-    EKS_CLUSTER_NAME: brain-tasks-eks
+    CLUSTER_NAME: brain-tasks-eks
 
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
+      - echo Logging into Amazon ECR...
       - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
@@ -23,13 +23,15 @@ phases:
 
   post_build:
     commands:
-      - echo Pushing Docker image...
+      - echo Pushing image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Updating kubeconfig...
-      - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $EKS_CLUSTER_NAME
-      - sed -i "s|IMAGE_PLACEHOLDER|$REPOSITORY_URI:$IMAGE_TAG|g" deployment.yaml
+      - aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_DEFAULT_REGION
+      - kubectl apply -f namespace.yaml
       - kubectl apply -f deployment.yaml
       - kubectl apply -f service.yaml
+      - kubectl set image deployment/brain-tasks-app brain-tasks-app=$REPOSITORY_URI:$IMAGE_TAG -n brain-tasks
+      - kubectl rollout status deployment/brain-tasks-app -n brain-tasks
 
 artifacts:
   files:

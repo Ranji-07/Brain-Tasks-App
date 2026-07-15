@@ -5,7 +5,7 @@ metadata:
   namespace: brain-tasks
 spec:
   selector:
-    app: brain-tasks-app
+    app: brain-tasks
   type: LoadBalancer
   ports:
     - protocol: TCP
